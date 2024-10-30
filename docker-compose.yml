@@ -1,0 +1,62 @@
+services:
+  postgres-development:
+    image: postgis/postgis
+    restart: unless-stopped
+    container_name: postgis-development
+    env_file: .env.development
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    profiles:
+      - development
+    ports:
+      - '5432:5432'
+    networks:
+      - default
+  postgres-production:
+    image: postgis/postgis
+    restart: unless-stopped
+    container_name: postgis-production
+    env_file: .env.production
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    profiles:
+      - production
+    ports:
+      - '5432:5432'
+    networks:
+      - default
+  app-development:
+    container_name: nestjs-app-development
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile.development
+    env_file:
+      - .env.development
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    profiles:
+      - development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres-development
+  app-production:
+    container_name: nestjs-app-production
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    env_file:
+      - .env.production
+    ports:
+      - '8000:3000'
+    profiles:
+      - production
+    depends_on:
+      - postgres-production
+volumes:
+  db-data:
+  node_modules:
+networks:
+  default:
